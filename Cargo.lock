@@ -128,7 +128,8 @@ dependencies = [
 [[package]]
 name = "libav-sys-ng"
 version = "0.1.0"
-source = "git+https://github.com/NDRAEY/libav-sys-ng#9c7c09417617400a84e0626387ccccc136e6f05a"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1dd25a3dfb428c8c4479d065f25aabf24e92e212d16597a12aa94108a3bd3701"
 dependencies = [
  "bindgen",
 ]
