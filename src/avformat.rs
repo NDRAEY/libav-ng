@@ -1,4 +1,6 @@
-use libav_sys_ng::{self, avformat_alloc_output_context2, avformat_free_context, AVOutputFormat};
+use std::ffi::{CStr, CString};
+
+use libav_sys_ng::{self, av_dump_format, avformat_alloc_output_context2, avformat_free_context, AVFormatContext, AVInputFormat, AVOutputFormat};
 
 pub struct FormatContext {
     _format_ctx: *mut libav_sys_ng::AVFormatContext,
@@ -18,11 +20,14 @@ impl FormatContext {
                 None => core::ptr::null::<AVOutputFormat>(),
             };
 
+            let fmt_name = CString::new(format_name).expect("CString::new(format_name) failed");
+            let real_filename = CString::new(filename).expect("CString::new(filename) failed");
+
             avformat_alloc_output_context2(
                 &mut context,
                 ptr,
-                format_name.as_bytes().as_ptr() as *const i8,
-                filename.as_bytes().as_ptr() as *const i8,
+                fmt_name.as_ptr(),
+                real_filename.as_ptr(),
             );
 
             if context == core::ptr::null_mut() {
@@ -34,6 +39,28 @@ impl FormatContext {
             }
         }
     }
+
+    pub unsafe fn get_input_format(&self) -> *const AVInputFormat {
+        return (*self._format_ctx).iformat;
+    }
+
+    pub fn get_output_format(&self) -> &AVOutputFormat {
+        unsafe {
+            return &*(*self._format_ctx).oformat as &AVOutputFormat;
+        }
+    }
+
+    pub unsafe fn raw(&mut self) -> *mut AVFormatContext {
+        self._format_ctx
+    }
+
+    pub fn dump(&self, index: i32, url: &str, is_output: bool) {
+        unsafe {
+            let raw_url = CString::new(url).expect("CString::new(url) failed");
+
+            av_dump_format(self._format_ctx, index, raw_url.as_ptr(), is_output as i32)
+        }
+    }
 }
 
 impl Drop for FormatContext {
@@ -43,3 +70,7 @@ impl Drop for FormatContext {
         }
     }
 }
+
+
+
+

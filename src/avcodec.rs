@@ -116,6 +116,24 @@ impl CodecContext {
         }
     }
 
+    pub fn set_gop_size(&mut self, gop_size: i32) {
+        unsafe {
+            (*self._codec_ctx).gop_size = gop_size;
+        }
+    }
+
+    pub fn get_gop_size(&self) -> i32 {
+        unsafe {
+            return (*self._codec_ctx).gop_size;
+        }
+    }
+
+    pub fn set_max_b_frames(&mut self, max_b_frames: i32) {
+        unsafe {
+            (*self._codec_ctx).max_b_frames = max_b_frames;
+        }
+    }
+
     /// Fills parameters from codec into `params`
     pub fn fill_parameters(&self, params: *mut AVCodecParameters) {
         unsafe {
