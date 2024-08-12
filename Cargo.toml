@@ -5,6 +5,9 @@ edition = "2021"
 authors = ["NDRAEY <pikachu_andrey@vk.com>"]
 license = "MIT"
 description = "New high level Rust bindings for libav"
+repository = "https://github.com/NDRAEY/libav-ng"
+keywords = ["bindings", "multimedia"]
+categories = ["multimedia"]
 
 [dependencies]
 libav-sys-ng = "^0.1.0"
