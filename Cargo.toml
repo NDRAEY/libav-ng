@@ -2,6 +2,9 @@
 name = "libav-ng"
 version = "0.1.0"
 edition = "2021"
+authors = ["NDRAEY <pikachu_andrey@vk.com>"]
+license = "MIT"
+description = "New high level bindings for libav"
 
 [dependencies]
 libav-sys-ng = "^0.1.0"
