@@ -4,4 +4,4 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-libav-sys-ng = { git = "https://github.com/NDRAEY/libav-sys-ng" }
+libav-sys-ng = "^0.1.0"
