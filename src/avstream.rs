@@ -1,4 +1,4 @@
-use crate::avformat::FormatContext;
+use crate::{avcodec::{self, CodecParameters}, avformat::FormatContext};
 use libav_sys_ng::AVCodec;
 
 pub struct Stream {
@@ -23,5 +23,9 @@ impl Stream {
 
             Some(Stream { _stream: stream })
         }
+    }
+
+    pub(crate) unsafe fn raw(&mut self) -> *mut libav_sys_ng::AVStream {
+        self._stream
     }
 }

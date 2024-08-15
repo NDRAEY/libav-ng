@@ -1,7 +1,8 @@
 use std::ffi::{CStr, CString};
 
 use libav_sys_ng::{
-    self, av_dict_copy, av_dict_count, av_dict_free, av_dict_get, av_dict_set, AVDictionary, AVDictionaryEntry, AV_DICT_IGNORE_SUFFIX
+    self, av_dict_copy, av_dict_count, av_dict_free, av_dict_get, av_dict_set, AVDictionary,
+    AVDictionaryEntry, AV_DICT_IGNORE_SUFFIX,
 };
 
 pub struct Dictionary {
@@ -39,7 +40,7 @@ impl Dictionary {
             let mw = CStr::from_ptr(raw_value)
                 .to_str()
                 .expect("Failed to convert!")
-                .to_string(); 
+                .to_string();
 
             return Some(mw);
         }
@@ -170,7 +171,7 @@ mod tests {
         let mut dict = Dictionary::new();
 
         dict.set("hello", "world");
- 
+
         assert_eq!(dict.get("hallo"), None);
         assert_eq!(dict.get("hello"), Some("world".to_string()));
     }
