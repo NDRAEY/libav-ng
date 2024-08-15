@@ -1,5 +1,4 @@
 /// This module represents (almost) safe binding to AVCodecContext
-
 use libav_sys_ng::{
     avcodec_alloc_context3, avcodec_find_encoder, avcodec_free_context, avcodec_is_open,
     avcodec_open2, avcodec_parameters_from_context, avcodec_receive_packet, avcodec_send_frame,
@@ -16,7 +15,7 @@ pub struct CodecContext {
 
 impl CodecContext {
     /// Creates CodecContext from encoder ID
-    /// 
+    ///
     /// Returns Some(CodecContext) on success, None on error.
     pub fn from_encoder_id(id: AVCodecID) -> Option<CodecContext> {
         unsafe {

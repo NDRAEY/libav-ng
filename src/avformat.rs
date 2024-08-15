@@ -1,6 +1,9 @@
 use std::ffi::{CStr, CString};
 
-use libav_sys_ng::{self, av_dump_format, avformat_alloc_output_context2, avformat_free_context, AVFormatContext, AVInputFormat, AVOutputFormat};
+use libav_sys_ng::{
+    self, av_dump_format, avformat_alloc_output_context2, avformat_free_context, AVFormatContext,
+    AVInputFormat, AVOutputFormat,
+};
 
 pub struct FormatContext {
     _format_ctx: *mut libav_sys_ng::AVFormatContext,
@@ -70,7 +73,3 @@ impl Drop for FormatContext {
         }
     }
 }
-
-
-
-
