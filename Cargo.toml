@@ -10,4 +10,4 @@ keywords = ["bindings", "multimedia"]
 categories = ["multimedia"]
 
 [dependencies]
-libav-sys-ng = "^0.1.0"
+libav-sys-ng = "^0.1.1"

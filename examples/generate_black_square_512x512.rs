@@ -1,4 +1,5 @@
-use libav_ng::{self, avcodec::CodecContext, avformat::FormatContext, low_level};
+use libav_ng::{self, avcodec::CodecContext, avformat::FormatContext, avframe::Frame, low_level};
+use libav_sys_ng::{AVPixelFormat_AV_PIX_FMT_RGB24, AVIO_FLAG_WRITE};
 
 fn main() {
     let filename = "bk.png";
@@ -12,7 +13,8 @@ fn main() {
 
     let oformat = format_ctx.get_output_format();
 
-    let mut stream = libav_ng::avstream::Stream::new(&mut format_ctx, None).expect("Failed to create a stream");
+    let mut stream =
+        libav_ng::avstream::Stream::new(&mut format_ctx, None).expect("Failed to create a stream");
 
     codec
         .set_size(width, height)
@@ -32,6 +34,25 @@ fn main() {
     };
 
     codec.fill_stream_parameters(&mut stream);
+
+
+    match format_ctx.open("black.png", AVIO_FLAG_WRITE as i32) {
+        Err(err) => panic!("Error opening file! {err}"),
+        Ok(()) => {}
+    };
+
+    format_ctx.write_header(None).expect("Failed to write a header!");
+
+
+    let mut frame = Frame::from_size_and_pixfmt(width, height, AVPixelFormat_AV_PIX_FMT_RGB24).expect("Failed to make a frame!");
+
+    let mut data = frame.data_plane(0).expect("Failed to get plane!");
+
+    for y in 0usize..height as usize {
+        for x in 0usize..width as usize {
+            data[y * (width as usize * 3usize) + x] = 0xff;
+        }
+    }
 
     println!("Hello, world!");
 }

@@ -1,6 +1,10 @@
 /// This module represents (almost) safe binding to AVCodecContext
 use libav_sys_ng::{
-    avcodec_alloc_context3, avcodec_find_encoder, avcodec_free_context, avcodec_is_open, avcodec_open2, avcodec_parameters_alloc, avcodec_parameters_copy, avcodec_parameters_free, avcodec_parameters_from_context, avcodec_parameters_to_context, avcodec_receive_packet, avcodec_send_frame, AVCodec, AVCodecContext, AVCodecID, AVCodecParameters, AVDictionary, AVPixelFormat, AVRational
+    avcodec_alloc_context3, avcodec_find_encoder, avcodec_free_context, avcodec_is_open,
+    avcodec_open2, avcodec_parameters_alloc, avcodec_parameters_copy, avcodec_parameters_free,
+    avcodec_parameters_from_context, avcodec_parameters_to_context, avcodec_receive_packet,
+    avcodec_send_frame, AVCodec, AVCodecContext, AVCodecID, AVCodecParameters, AVDictionary,
+    AVPixelFormat, AVRational,
 };
 
 use crate::{avdictionary::Dictionary, avframe, avstream::Stream};
@@ -213,17 +217,15 @@ impl Drop for CodecContext {
     }
 }
 
-
-
 pub struct CodecParameters {
-    pub(crate) _par: *mut AVCodecParameters
+    pub(crate) _par: *mut AVCodecParameters,
 }
 
 impl CodecParameters {
     pub fn new() -> Option<CodecParameters> {
         unsafe {
             let raw = avcodec_parameters_alloc();
-        
+
             if raw.is_null() {
                 return None;
             }
@@ -245,8 +247,6 @@ impl Clone for CodecParameters {
 
 impl Drop for CodecParameters {
     fn drop(&mut self) {
-        unsafe {
-            avcodec_parameters_free(&mut self._par)
-        }
+        unsafe { avcodec_parameters_free(&mut self._par) }
     }
 }

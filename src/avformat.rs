@@ -1,9 +1,11 @@
 use std::ffi::{CStr, CString};
 
 use libav_sys_ng::{
-    self, av_dump_format, avformat_alloc_output_context2, avformat_free_context, AVFormatContext,
-    AVInputFormat, AVOutputFormat,
+    self, av_dump_format, avformat_alloc_output_context2, avformat_free_context,
+    avformat_write_header, avio_open, AVFormatContext, AVInputFormat, AVOutputFormat,
 };
+
+use crate::avdictionary::Dictionary;
 
 pub struct FormatContext {
     _format_ctx: *mut libav_sys_ng::AVFormatContext,
@@ -63,6 +65,37 @@ impl FormatContext {
 
             av_dump_format(self._format_ctx, index, raw_url.as_ptr(), is_output as i32)
         }
+    }
+
+    pub fn open(&mut self, url: &str, flags: i32) -> Result<(), i32> {
+        unsafe {
+            let raw_url = CString::new(url).expect("CString::new(url) failed");
+
+            let x = avio_open(&mut (*self._format_ctx).pb, raw_url.as_ptr(), flags);
+
+            if x < 0 {
+                return Err(x);
+            }
+        }
+
+        Ok(())
+    }
+
+    pub fn write_header(&mut self, options: Option<&mut Dictionary>) -> Result<(), i32> {
+        unsafe {
+            let raw_options = match options {
+                Some(op) => &mut op.raw(),
+                None => core::ptr::null_mut(),
+            };
+
+            let code = avformat_write_header(self._format_ctx, raw_options);
+
+            if code < 0 {
+                return Err(code);
+            }
+        }
+
+        Ok(())
     }
 }
 

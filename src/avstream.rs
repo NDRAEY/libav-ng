@@ -1,4 +1,7 @@
-use crate::{avcodec::{self, CodecParameters}, avformat::FormatContext};
+use crate::{
+    avcodec::{self, CodecParameters},
+    avformat::FormatContext,
+};
 use libav_sys_ng::AVCodec;
 
 pub struct Stream {
