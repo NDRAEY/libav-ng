@@ -1,13 +1,9 @@
 /// This module represents (almost) safe binding to AVCodecContext
 use libav_sys_ng::{
-    avcodec_alloc_context3, avcodec_find_encoder, avcodec_free_context, avcodec_is_open,
-    avcodec_open2, avcodec_parameters_alloc, avcodec_parameters_copy, avcodec_parameters_free,
-    avcodec_parameters_from_context, avcodec_parameters_to_context, avcodec_receive_packet,
-    avcodec_send_frame, AVCodec, AVCodecContext, AVCodecID, AVCodecParameters, AVDictionary,
-    AVPixelFormat, AVRational,
+    AVCodec, AVCodecContext, AVCodecID, AVCodecParameters, AVDictionary, AVPixelFormat, AVRational, av_frame_alloc, av_frame_unref, avcodec_alloc_context3, avcodec_find_decoder, avcodec_find_encoder, avcodec_free_context, avcodec_is_open, avcodec_open2, avcodec_parameters_alloc, avcodec_parameters_copy, avcodec_parameters_free, avcodec_parameters_from_context, avcodec_parameters_to_context, avcodec_receive_frame, avcodec_receive_packet, avcodec_send_frame, avcodec_send_packet
 };
 
-use crate::{avdictionary::Dictionary, avframe, avstream::Stream};
+use crate::{avcodec_parameters::CodecParameters, avdictionary::Dictionary, avframe::{self, Frame}, avpacket::Packet, avstream::Stream};
 
 /// AVCodecContext wrapper
 pub struct CodecContext {
@@ -23,13 +19,34 @@ impl CodecContext {
         unsafe {
             let codec = avcodec_find_encoder(id);
 
-            if codec == core::ptr::null() {
+            if codec.is_null() {
                 return None;
             }
 
             let codec_ctx = avcodec_alloc_context3(codec);
 
-            if codec_ctx == core::ptr::null_mut() {
+            if codec_ctx.is_null() {
+                return None;
+            }
+
+            Some(CodecContext {
+                _codec: codec,
+                _codec_ctx: codec_ctx,
+            })
+        }
+    }
+
+    pub fn from_decoder_id(id: AVCodecID) -> Option<CodecContext> {
+        unsafe {
+            let codec = avcodec_find_decoder(id);
+
+            if codec.is_null() {
+                return None;
+            }
+
+            let codec_ctx = avcodec_alloc_context3(codec);
+
+            if codec_ctx.is_null() {
                 return None;
             }
 
@@ -154,30 +171,28 @@ impl CodecContext {
     /// Fills parameters from codec into `params`
     pub fn fill_parameters(&self, params: &mut CodecParameters) {
         unsafe {
-            avcodec_parameters_from_context(params._par, self._codec_ctx);
+            avcodec_parameters_from_context(params._p, self._codec_ctx);
         }
     }
 
     /// Fills codec parameters from `params`
     pub fn fill_from_parameters(&self, params: &CodecParameters) {
         unsafe {
-            avcodec_parameters_to_context(self._codec_ctx, params._par);
+            avcodec_parameters_to_context(self._codec_ctx, params._p);
         }
     }
 
-    pub fn fill_stream_parameters(&self, stream: &mut Stream) {
+    pub fn fill_stream_parameters(&self, stream: &Stream) {
         unsafe {
             avcodec_parameters_from_context((*stream.raw()).codecpar, self._codec_ctx);
         }
     }
 
     /// Set codec flags
-    pub fn set_flags(&mut self, flags: i32) -> &mut CodecContext {
+    pub fn set_flags(&mut self, flags: i32) {
         unsafe {
             (*self._codec_ctx).flags = flags;
         }
-
-        self
     }
 
     /// Get codec flags
@@ -194,10 +209,21 @@ impl CodecContext {
         }
     }
 
-    // TODO: Make this function return Packet when it gets implemented.
     /// Receive packet from codec to `out`
-    pub unsafe fn receive_packet(&mut self, out: *mut libav_sys_ng::AVPacket) -> i32 {
-        return avcodec_receive_packet(self._codec_ctx, out);
+    pub fn receive_packet(&mut self, out: &mut Packet) -> i32 {
+        unsafe {
+            avcodec_receive_packet(self._codec_ctx, out.raw_mut())
+        }
+    }
+
+    pub fn receive_frame(&mut self, out: &mut Frame) -> i32 {
+        unsafe {
+            avcodec_receive_frame(self._codec_ctx, out.raw_mut())
+        }
+    }
+
+    pub fn send_packet(&mut self, packet: &Packet) -> i32 {
+        unsafe { avcodec_send_packet(self._codec_ctx, packet.raw()) }
     }
 
     /// Returns true if codec is opened.
@@ -214,39 +240,5 @@ impl Drop for CodecContext {
         unsafe {
             avcodec_free_context(&mut self._codec_ctx);
         }
-    }
-}
-
-pub struct CodecParameters {
-    pub(crate) _par: *mut AVCodecParameters,
-}
-
-impl CodecParameters {
-    pub fn new() -> Option<CodecParameters> {
-        unsafe {
-            let raw = avcodec_parameters_alloc();
-
-            if raw.is_null() {
-                return None;
-            }
-
-            Some(CodecParameters { _par: raw })
-        }
-    }
-}
-
-impl Clone for CodecParameters {
-    fn clone(&self) -> Self {
-        let parameters = CodecParameters::new().expect("Failed to allocate AVCodecParameters");
-
-        unsafe { avcodec_parameters_copy(parameters._par, self._par) };
-
-        parameters
-    }
-}
-
-impl Drop for CodecParameters {
-    fn drop(&mut self) {
-        unsafe { avcodec_parameters_free(&mut self._par) }
     }
 }

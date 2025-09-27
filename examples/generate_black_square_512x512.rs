@@ -35,16 +35,17 @@ fn main() {
 
     codec.fill_stream_parameters(&mut stream);
 
-
     match format_ctx.open("black.png", AVIO_FLAG_WRITE as i32) {
         Err(err) => panic!("Error opening file! {err}"),
         Ok(()) => {}
     };
 
-    format_ctx.write_header(None).expect("Failed to write a header!");
+    format_ctx
+        .write_header(None)
+        .expect("Failed to write a header!");
 
-
-    let mut frame = Frame::from_size_and_pixfmt(width, height, AVPixelFormat_AV_PIX_FMT_RGB24).expect("Failed to make a frame!");
+    let mut frame = Frame::from_size_and_pixfmt(width, height, AVPixelFormat_AV_PIX_FMT_RGB24)
+        .expect("Failed to make a frame!");
 
     let mut data = frame.data_plane(0).expect("Failed to get plane!");
 

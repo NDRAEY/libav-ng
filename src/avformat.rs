@@ -1,11 +1,12 @@
-use std::ffi::{CStr, CString};
+use std::ffi::CString;
 
 use libav_sys_ng::{
-    self, av_dump_format, avformat_alloc_output_context2, avformat_free_context,
-    avformat_write_header, avio_open, AVFormatContext, AVInputFormat, AVOutputFormat,
+    self, av_dump_format, av_read_frame, av_seek_frame, avformat_alloc_output_context2,
+    avformat_find_stream_info, avformat_free_context, avformat_open_input, avformat_write_header,
+    avio_open, avio_seek_time, AVFormatContext, AVInputFormat, AVOutputFormat,
 };
 
-use crate::avdictionary::Dictionary;
+use crate::{avdictionary::Dictionary, avformat_streams_iter::FormatStreamsIter, avpacket::Packet};
 
 pub struct FormatContext {
     _format_ctx: *mut libav_sys_ng::AVFormatContext,
@@ -45,6 +46,34 @@ impl FormatContext {
         }
     }
 
+    pub fn open_input(url: &str) -> Option<Self> {
+        unsafe {
+            let mut context = core::ptr::null_mut::<libav_sys_ng::AVFormatContext>();
+
+            let url_c = CString::new(url).unwrap();
+
+            // TODO: Manage InputFormat and Options arguments.
+            let result = avformat_open_input(
+                &mut context,
+                url_c.as_ptr(),
+                core::ptr::null(),
+                core::ptr::null_mut(),
+            );
+
+            if result < 0 {
+                return None;
+            } else {
+                return Some(FormatContext {
+                    _format_ctx: context,
+                });
+            }
+        }
+    }
+
+    pub fn find_stream_info(&self) -> i32 {
+        unsafe { avformat_find_stream_info(self._format_ctx, core::ptr::null_mut()) }
+    }
+
     pub unsafe fn get_input_format(&self) -> *const AVInputFormat {
         return (*self._format_ctx).iformat;
     }
@@ -55,7 +84,11 @@ impl FormatContext {
         }
     }
 
-    pub unsafe fn raw(&mut self) -> *mut AVFormatContext {
+    pub unsafe fn raw(&self) -> *const AVFormatContext {
+        self._format_ctx
+    }
+
+    pub unsafe fn raw_mut(&mut self) -> *mut AVFormatContext {
         self._format_ctx
     }
 
@@ -96,6 +129,30 @@ impl FormatContext {
         }
 
         Ok(())
+    }
+
+    pub fn seek_ts(&mut self, stream_idx: i32, timestamp: i64) -> i32 {
+        unsafe { av_seek_frame(self._format_ctx, stream_idx, timestamp, 0) }
+    }
+
+    pub fn seek_msec(&mut self, stream_idx: i32, msec: i64) -> i32 {
+        let tm = match self.streams().nth(stream_idx as _) {
+            Some(st) => st.time_base(),
+            None => return -1,
+        };
+
+        self.seek_ts(
+            stream_idx,
+            (msec as f64 * (tm.den as f64 / tm.num as f64) / 1000.0).floor() as _,
+        )
+    }
+
+    pub fn read_frame(&mut self, packet: &mut Packet) -> i32 {
+        unsafe { av_read_frame(self._format_ctx, packet.raw_mut()) }
+    }
+
+    pub fn streams(&mut self) -> FormatStreamsIter<'_> {
+        FormatStreamsIter::new(self)
     }
 }
 
