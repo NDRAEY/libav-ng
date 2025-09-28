@@ -55,7 +55,7 @@ impl Stream {
         let time_base = self.time_base();
         let duration = self.duration();
 
-        duration as f64 * (time_base.num as f64 / time_base.den as f64)
+        (duration as f64 * time_base.num as f64) / time_base.den as f64
     }
 
     pub unsafe fn raw(&self) -> &AVStream {
