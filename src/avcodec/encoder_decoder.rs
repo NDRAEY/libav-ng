@@ -1,6 +1,5 @@
 /// Structures `Encoder` and `Decoder` provided by this module are used to differ
 /// decoder and encoder in CodecContext, because using wrong mode cause SIGSEGV.use std::ops::{Deref, DerefMut};
-
 use std::ops::{Deref, DerefMut};
 
 use libav_sys_ng::{avcodec_receive_frame, avcodec_send_frame};

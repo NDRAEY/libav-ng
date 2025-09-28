@@ -4,7 +4,8 @@ use libav_ng::{
     avcodec::CodecContext, avformat::FormatContext, avframe::Frame, avpacket::Packet, sws::Sws,
 };
 use libav_sys_ng::{
-    AVMediaType_AVMEDIA_TYPE_AUDIO, AVMediaType_AVMEDIA_TYPE_VIDEO, AVPixelFormat_AV_PIX_FMT_RGB24, SWS_BILINEAR, SwsContext, sws_freeContext, sws_getContext, sws_scale
+    sws_freeContext, sws_getContext, sws_scale, AVMediaType_AVMEDIA_TYPE_AUDIO,
+    AVMediaType_AVMEDIA_TYPE_VIDEO, AVPixelFormat_AV_PIX_FMT_RGB24, SwsContext, SWS_BILINEAR,
 };
 
 fn main() {
@@ -55,7 +56,6 @@ fn main() {
             let bps = parameters.bitrate();
 
             println!("       |- {bps} bps");
-
         }
     }
 }

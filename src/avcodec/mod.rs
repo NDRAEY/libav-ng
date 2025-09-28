@@ -1,10 +1,9 @@
 /// This module represents (almost) safe binding to AVCodecContext
 use libav_sys_ng::{
-    avcodec_alloc_context3, avcodec_find_decoder,
-    avcodec_find_encoder, avcodec_free_context, avcodec_is_open, avcodec_open2,
-    avcodec_parameters_from_context, avcodec_parameters_to_context,
-    avcodec_receive_packet, avcodec_send_packet, AVCodec, AVCodecContext,
-    AVCodecID, AVDictionary, AVPixelFormat, AVRational,
+    avcodec_alloc_context3, avcodec_find_decoder, avcodec_find_encoder, avcodec_free_context,
+    avcodec_is_open, avcodec_open2, avcodec_parameters_from_context, avcodec_parameters_to_context,
+    avcodec_receive_packet, avcodec_send_packet, AVCodec, AVCodecContext, AVCodecID, AVDictionary,
+    AVPixelFormat, AVRational,
 };
 
 use crate::{
@@ -117,9 +116,7 @@ impl CodecContext {
 
     /// Get bitrate
     pub fn get_bitrate(&self) -> i64 {
-        unsafe {
-            (*self._codec_ctx).bit_rate
-        }
+        unsafe { (*self._codec_ctx).bit_rate }
     }
 
     /// Set framerate (this also sets `time_base` but in inverse order)
@@ -137,16 +134,12 @@ impl CodecContext {
 
     /// Get framerate
     pub fn get_framerate(&self) -> AVRational {
-        unsafe {
-            (*self._codec_ctx).framerate
-        }
+        unsafe { (*self._codec_ctx).framerate }
     }
 
     /// Get time base
     pub fn get_time_base(&self) -> AVRational {
-        unsafe {
-            (*self._codec_ctx).time_base
-        }
+        unsafe { (*self._codec_ctx).time_base }
     }
 
     /// Set pixel format
@@ -160,9 +153,7 @@ impl CodecContext {
 
     /// Get pixel format
     pub fn get_pixel_format(&self) -> AVPixelFormat {
-        unsafe {
-            (*self._codec_ctx).pix_fmt
-        }
+        unsafe { (*self._codec_ctx).pix_fmt }
     }
 
     pub fn set_gop_size(&mut self, gop_size: i32) -> &mut CodecContext {
@@ -174,9 +165,7 @@ impl CodecContext {
     }
 
     pub fn get_gop_size(&self) -> i32 {
-        unsafe {
-            (*self._codec_ctx).gop_size
-        }
+        unsafe { (*self._codec_ctx).gop_size }
     }
 
     pub fn set_max_b_frames(&mut self, max_b_frames: i32) -> &mut CodecContext {
@@ -216,9 +205,7 @@ impl CodecContext {
 
     /// Get codec flags
     pub fn get_flags(&self) -> i32 {
-        unsafe {
-            (*self._codec_ctx).flags
-        }
+        unsafe { (*self._codec_ctx).flags }
     }
 
     /// Receive packet from codec to `out`
@@ -232,9 +219,7 @@ impl CodecContext {
 
     /// Returns true if codec is opened.
     pub fn is_open(&self) -> bool {
-        unsafe {
-            avcodec_is_open(self._codec_ctx) != 0
-        }
+        unsafe { avcodec_is_open(self._codec_ctx) != 0 }
     }
 
     pub unsafe fn raw_codec(&self) -> *const AVCodec {

@@ -1,8 +1,8 @@
 use std::fmt::Debug;
 
+use crate::avcodec::CodecContext;
 use crate::{avcodec::codec_parameters::CodecParameters, avformat::FormatContext};
 use libav_sys_ng::{AVCodec, AVRational, AVStream};
-use crate::{avcodec::CodecContext};
 
 pub struct Stream {
     pub(crate) _stream: *mut libav_sys_ng::AVStream,

@@ -1,7 +1,10 @@
 use std::ffi::CString;
 
 use libav_sys_ng::{
-    self, AVFormatContext, AVInputFormat, AVOutputFormat, av_dump_format, av_read_frame, av_seek_frame, av_write_frame, av_write_trailer, avformat_alloc_output_context2, avformat_find_stream_info, avformat_free_context, avformat_open_input, avformat_write_header, avio_open
+    self, av_dump_format, av_read_frame, av_seek_frame, av_write_frame, av_write_trailer,
+    avformat_alloc_output_context2, avformat_find_stream_info, avformat_free_context,
+    avformat_open_input, avformat_write_header, avio_open, AVFormatContext, AVInputFormat,
+    AVOutputFormat,
 };
 
 use crate::{
@@ -80,9 +83,7 @@ impl FormatContext {
     }
 
     pub fn get_output_format(&self) -> &AVOutputFormat {
-        unsafe {
-            &*(*self._format_ctx).oformat as &AVOutputFormat
-        }
+        unsafe { &*(*self._format_ctx).oformat as &AVOutputFormat }
     }
 
     pub unsafe fn raw(&self) -> &AVFormatContext {

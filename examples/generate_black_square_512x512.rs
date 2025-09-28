@@ -1,4 +1,7 @@
-use libav_ng::{self, avcodec::CodecContext, avformat::FormatContext, avframe::Frame, avpacket::Packet, avstream::Stream, low_level};
+use libav_ng::{
+    self, avcodec::CodecContext, avformat::FormatContext, avframe::Frame, avpacket::Packet,
+    avstream::Stream, low_level,
+};
 use libav_sys_ng::{AVPixelFormat_AV_PIX_FMT_RGB24, AVIO_FLAG_WRITE};
 
 fn main() {

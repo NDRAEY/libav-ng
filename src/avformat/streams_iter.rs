@@ -1,4 +1,3 @@
-
 use crate::{avformat::FormatContext, avstream::Stream};
 
 pub struct FormatStreamsIter<'a> {

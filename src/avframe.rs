@@ -49,9 +49,9 @@ impl Frame {
         if plane_nr >= 8 {
             return Err("Out of bounds.");
         }
-        
+
         let size = self.frame_size()?;
-        
+
         unsafe {
             Ok(core::slice::from_raw_parts(
                 (*self._frame).data[plane_nr],
@@ -84,9 +84,9 @@ impl Frame {
         if plane_nr >= 8 {
             return Err("Out of bounds.");
         }
-        
+
         let size = self.frame_size()?;
-        
+
         unsafe {
             Ok(core::slice::from_raw_parts_mut(
                 (*self._frame).data[plane_nr],
