@@ -1,4 +1,3 @@
-use libav_sys_ng::AVStream;
 
 use crate::{avformat::FormatContext, avstream::Stream};
 
@@ -10,7 +9,7 @@ pub struct FormatStreamsIter<'a> {
 
 impl<'a> FormatStreamsIter<'a> {
     pub fn new(format_ctx: &'a mut FormatContext) -> Self {
-        let count = unsafe { (*format_ctx.raw()).nb_streams } as usize;
+        let count = unsafe { format_ctx.raw().nb_streams } as usize;
 
         Self {
             position: 0,
@@ -28,7 +27,7 @@ impl Iterator for FormatStreamsIter<'_> {
             return None;
         }
 
-        let stream = unsafe { (*self.format_ctx.raw()).streams.add(self.position).read() };
+        let stream = unsafe { self.format_ctx.raw().streams.add(self.position).read() };
 
         self.position += 1;
 

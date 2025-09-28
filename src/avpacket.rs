@@ -4,6 +4,12 @@ pub struct Packet {
     pub(crate) inner: *mut AVPacket,
 }
 
+impl Default for Packet {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Packet {
     pub fn new() -> Self {
         Self {

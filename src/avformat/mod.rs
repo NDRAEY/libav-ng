@@ -39,12 +39,12 @@ impl FormatContext {
                 real_filename.as_ptr(),
             );
 
-            if context == core::ptr::null_mut() {
-                return None;
+            if context.is_null() {
+                None
             } else {
-                return Some(FormatContext {
+                Some(FormatContext {
                     _format_ctx: context,
-                });
+                })
             }
         }
     }
@@ -64,11 +64,11 @@ impl FormatContext {
             );
 
             if result < 0 {
-                return None;
+                None
             } else {
-                return Some(FormatContext {
+                Some(FormatContext {
                     _format_ctx: context,
-                });
+                })
             }
         }
     }
@@ -78,12 +78,12 @@ impl FormatContext {
     }
 
     pub unsafe fn get_input_format(&self) -> *const AVInputFormat {
-        return (*self._format_ctx).iformat;
+        (*self._format_ctx).iformat
     }
 
     pub fn get_output_format(&self) -> &AVOutputFormat {
         unsafe {
-            return &*(*self._format_ctx).oformat as &AVOutputFormat;
+            &*(*self._format_ctx).oformat as &AVOutputFormat
         }
     }
 

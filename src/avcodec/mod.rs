@@ -1,10 +1,9 @@
 /// This module represents (almost) safe binding to AVCodecContext
 use libav_sys_ng::{
-    av_frame_alloc, av_frame_unref, avcodec_alloc_context3, avcodec_find_decoder,
+    avcodec_alloc_context3, avcodec_find_decoder,
     avcodec_find_encoder, avcodec_free_context, avcodec_is_open, avcodec_open2,
-    avcodec_parameters_alloc, avcodec_parameters_copy, avcodec_parameters_free,
-    avcodec_parameters_from_context, avcodec_parameters_to_context, avcodec_receive_frame,
-    avcodec_receive_packet, avcodec_send_frame, avcodec_send_packet, AVCodec, AVCodecContext,
+    avcodec_parameters_from_context, avcodec_parameters_to_context,
+    avcodec_receive_packet, avcodec_send_packet, AVCodec, AVCodecContext,
     AVCodecID, AVDictionary, AVPixelFormat, AVRational,
 };
 
@@ -14,7 +13,6 @@ use crate::{
         encoder_decoder::{Decoder, Encoder},
     },
     avdictionary::Dictionary,
-    avframe::{self, Frame},
     avpacket::Packet,
     avstream::Stream,
 };
@@ -120,7 +118,7 @@ impl CodecContext {
     /// Get bitrate
     pub fn get_bitrate(&self) -> i64 {
         unsafe {
-            return (*self._codec_ctx).bit_rate;
+            (*self._codec_ctx).bit_rate
         }
     }
 
@@ -140,14 +138,14 @@ impl CodecContext {
     /// Get framerate
     pub fn get_framerate(&self) -> AVRational {
         unsafe {
-            return (*self._codec_ctx).framerate;
+            (*self._codec_ctx).framerate
         }
     }
 
     /// Get time base
     pub fn get_time_base(&self) -> AVRational {
         unsafe {
-            return (*self._codec_ctx).time_base;
+            (*self._codec_ctx).time_base
         }
     }
 
@@ -163,7 +161,7 @@ impl CodecContext {
     /// Get pixel format
     pub fn get_pixel_format(&self) -> AVPixelFormat {
         unsafe {
-            return (*self._codec_ctx).pix_fmt;
+            (*self._codec_ctx).pix_fmt
         }
     }
 
@@ -177,7 +175,7 @@ impl CodecContext {
 
     pub fn get_gop_size(&self) -> i32 {
         unsafe {
-            return (*self._codec_ctx).gop_size;
+            (*self._codec_ctx).gop_size
         }
     }
 
@@ -205,7 +203,7 @@ impl CodecContext {
 
     pub fn fill_stream_parameters(&self, stream: &Stream) {
         unsafe {
-            avcodec_parameters_from_context((*stream.raw()).codecpar, self._codec_ctx);
+            avcodec_parameters_from_context(stream.raw().codecpar, self._codec_ctx);
         }
     }
 
@@ -219,7 +217,7 @@ impl CodecContext {
     /// Get codec flags
     pub fn get_flags(&self) -> i32 {
         unsafe {
-            return (*self._codec_ctx).flags;
+            (*self._codec_ctx).flags
         }
     }
 
@@ -235,7 +233,7 @@ impl CodecContext {
     /// Returns true if codec is opened.
     pub fn is_open(&self) -> bool {
         unsafe {
-            return avcodec_is_open(self._codec_ctx) != 0;
+            avcodec_is_open(self._codec_ctx) != 0
         }
     }
 }

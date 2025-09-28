@@ -12,6 +12,12 @@ pub struct Dictionary {
     _dict: *mut AVDictionary,
 }
 
+impl Default for Dictionary {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Dictionary {
     pub fn new() -> Dictionary {
         Self {

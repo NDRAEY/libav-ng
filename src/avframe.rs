@@ -1,6 +1,5 @@
 use libav_sys_ng::{
-    self, av_frame_alloc, av_frame_free, av_frame_get_buffer, av_get_bits_per_pixel,
-    av_get_padded_bits_per_pixel, av_image_alloc, av_pix_fmt_desc_get, AVFrame,
+    self, av_frame_alloc, av_frame_free, av_frame_get_buffer, av_get_bits_per_pixel, av_pix_fmt_desc_get, AVFrame,
 };
 
 pub struct Frame {
@@ -27,7 +26,7 @@ impl Frame {
             let mut _frame = av_frame_alloc();
 
             if _frame.is_null() {
-                return None;
+                None
             } else {
                 (*_frame).width = width;
                 (*_frame).height = height;
@@ -63,10 +62,10 @@ impl Frame {
                 * depth.ok().unwrap()
                 / 8;
 
-            return Ok(core::slice::from_raw_parts_mut(
+            Ok(core::slice::from_raw_parts_mut(
                 (*self._frame).data[plane_nr],
                 size,
-            ));
+            ))
         }
     }
 
