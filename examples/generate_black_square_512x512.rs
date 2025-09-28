@@ -1,4 +1,4 @@
-use libav_ng::{self, avcodec::CodecContext, avformat::FormatContext, avframe::Frame, low_level};
+use libav_ng::{self, avcodec::CodecContext, avformat::FormatContext, avframe::Frame, avpacket::Packet, avstream::Stream, low_level};
 use libav_sys_ng::{AVPixelFormat_AV_PIX_FMT_RGB24, AVIO_FLAG_WRITE};
 
 fn main() {
@@ -8,13 +8,12 @@ fn main() {
 
     let mut format_ctx =
         FormatContext::new("image2", filename, None).expect("Failed to create FormatContext");
+
     let mut codec = CodecContext::from_encoder_id(low_level::AVCodecID_AV_CODEC_ID_PNG)
         .expect("Failed to create CodecContext");
 
-    let oformat = format_ctx.get_output_format();
-
     let mut stream =
-        libav_ng::avstream::Stream::new(&mut format_ctx, None).expect("Failed to create a stream");
+        Stream::new(&mut format_ctx, Some(&*codec)).expect("Failed to create a stream");
 
     codec
         .set_size(width, height)
@@ -37,7 +36,7 @@ fn main() {
 
     codec.fill_stream_parameters(&mut stream);
 
-    match format_ctx.open("black.png", AVIO_FLAG_WRITE as i32) {
+    match format_ctx.open(filename, AVIO_FLAG_WRITE as i32) {
         Err(err) => panic!("Error opening file! {err}"),
         Ok(()) => {}
     };
@@ -49,13 +48,29 @@ fn main() {
     let mut frame = Frame::from_size_and_pixfmt(width, height, AVPixelFormat_AV_PIX_FMT_RGB24)
         .expect("Failed to make a frame!");
 
-    let mut data = frame.data_plane(0).expect("Failed to get plane!");
+    let data = frame.data_plane_mut(0).expect("Failed to get plane!");
 
     for y in 0usize..height as usize {
         for x in 0usize..width as usize {
-            data[y * (width as usize * 3usize) + x] = 0xff;
+            let coord = y * (width as usize * 3usize) + (x * 3);
+
+            data[coord + 0] = 0xff;
+            data[coord + 1] = 0xff;
+            data[coord + 2] = 0xff;
         }
     }
+
+    codec.send_frame(&frame);
+
+    let mut packet = Packet::new();
+
+    codec.receive_packet(&mut packet);
+
+    format_ctx.write_frame(&mut packet);
+
+    packet.clear();
+
+    format_ctx.write_trailer();
 
     println!("Hello, world!");
 }

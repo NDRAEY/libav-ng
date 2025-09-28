@@ -236,6 +236,14 @@ impl CodecContext {
             avcodec_is_open(self._codec_ctx) != 0
         }
     }
+
+    pub unsafe fn raw_codec(&self) -> *const AVCodec {
+        self._codec
+    }
+
+    pub unsafe fn raw_codec_context(&self) -> *const AVCodecContext {
+        self._codec_ctx
+    }
 }
 
 impl Drop for CodecContext {

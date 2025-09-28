@@ -66,7 +66,6 @@ fn main() {
                     let mut new_frame =
                         Frame::from_size_and_pixfmt(width, height, AVPixelFormat_AV_PIX_FMT_RGB24)
                             .unwrap();
-                    new_frame.allocate_buffer();
 
                     let sws = Sws::new(
                         width,

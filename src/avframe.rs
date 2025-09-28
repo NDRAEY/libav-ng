@@ -1,5 +1,6 @@
 use libav_sys_ng::{
-    self, av_frame_alloc, av_frame_free, av_frame_get_buffer, av_get_bits_per_pixel, av_pix_fmt_desc_get, AVFrame,
+    self, av_frame_alloc, av_frame_free, av_frame_get_buffer, av_get_bits_per_pixel,
+    av_pix_fmt_desc_get, AVFrame,
 };
 
 pub struct Frame {
@@ -32,36 +33,61 @@ impl Frame {
                 (*_frame).height = height;
                 (*_frame).format = pixfmt;
 
-                Some(Frame {
+                let mut this = Frame {
                     _frame,
                     is_frame_allocated: false,
-                })
+                };
+
+                this.allocate_buffer();
+
+                Some(this)
             }
         }
     }
 
-    pub fn data_plane(&mut self, plane_nr: usize) -> Result<&mut [u8], &str> {
+    pub fn data_plane(&self, plane_nr: usize) -> Result<&[u8], &str> {
+        if plane_nr >= 8 {
+            return Err("Out of bounds.");
+        }
+        
+        let size = self.frame_size()?;
+        
         unsafe {
-            if plane_nr >= 8 {
-                return Err("Out of bounds.");
-            }
+            Ok(core::slice::from_raw_parts(
+                (*self._frame).data[plane_nr],
+                size,
+            ))
+        }
+    }
 
-            let data = av_pix_fmt_desc_get((*self._frame).format);
-            let depth = if data.is_null() {
-                Err("Failed to get pixel format info")
-            } else {
-                Ok(av_get_bits_per_pixel(data) as usize)
-            };
+    pub fn frame_size(&self) -> Result<usize, &str> {
+        let data = unsafe { av_pix_fmt_desc_get((*self._frame).format) };
+        let depth = if data.is_null() {
+            Err("Failed to get pixel format info")
+        } else {
+            Ok(unsafe { av_get_bits_per_pixel(data) } as usize)
+        };
 
-            if depth.is_err() {
-                return Err(depth.err().unwrap());
-            }
+        if depth.is_err() {
+            return Err(depth.err().unwrap());
+        }
 
-            let size = (*self._frame).width as usize
-                * (*self._frame).height as usize
-                * depth.ok().unwrap()
-                / 8;
+        let size = (unsafe { *self._frame }).width as usize
+            * (unsafe { *self._frame }).height as usize
+            * depth.ok().unwrap()
+            / 8;
 
+        Ok(size)
+    }
+
+    pub fn data_plane_mut(&mut self, plane_nr: usize) -> Result<&mut [u8], &str> {
+        if plane_nr >= 8 {
+            return Err("Out of bounds.");
+        }
+        
+        let size = self.frame_size()?;
+        
+        unsafe {
             Ok(core::slice::from_raw_parts_mut(
                 (*self._frame).data[plane_nr],
                 size,
@@ -69,7 +95,7 @@ impl Frame {
         }
     }
 
-    pub fn allocate_buffer(&mut self) {
+    fn allocate_buffer(&mut self) {
         if self.is_frame_allocated {
             return;
         }

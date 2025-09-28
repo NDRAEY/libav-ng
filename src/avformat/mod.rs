@@ -1,9 +1,7 @@
 use std::ffi::CString;
 
 use libav_sys_ng::{
-    self, av_dump_format, av_read_frame, av_seek_frame, avformat_alloc_output_context2,
-    avformat_find_stream_info, avformat_free_context, avformat_open_input, avformat_write_header,
-    avio_open, AVFormatContext, AVInputFormat, AVOutputFormat,
+    self, AVFormatContext, AVInputFormat, AVOutputFormat, av_dump_format, av_read_frame, av_seek_frame, av_write_frame, av_write_trailer, avformat_alloc_output_context2, avformat_find_stream_info, avformat_free_context, avformat_open_input, avformat_write_header, avio_open
 };
 
 use crate::{
@@ -154,8 +152,16 @@ impl FormatContext {
         unsafe { av_read_frame(self._format_ctx, packet.raw_mut()) }
     }
 
+    pub fn write_frame(&mut self, packet: &mut Packet) -> i32 {
+        unsafe { av_write_frame(self._format_ctx, packet.raw_mut()) }
+    }
+
     pub fn streams(&mut self) -> FormatStreamsIter<'_> {
         FormatStreamsIter::new(self)
+    }
+
+    pub fn write_trailer(&mut self) {
+        unsafe { av_write_trailer(self._format_ctx) };
     }
 }
 

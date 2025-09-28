@@ -2,18 +2,19 @@ use std::fmt::Debug;
 
 use crate::{avcodec::codec_parameters::CodecParameters, avformat::FormatContext};
 use libav_sys_ng::{AVCodec, AVRational, AVStream};
+use crate::{avcodec::CodecContext};
 
 pub struct Stream {
     pub(crate) _stream: *mut libav_sys_ng::AVStream,
 }
 
 impl Stream {
-    pub fn new(format_ctx: &mut FormatContext, codec: Option<&AVCodec>) -> Option<Stream> {
+    pub fn new(format_ctx: &mut FormatContext, codec: Option<&CodecContext>) -> Option<Stream> {
         unsafe {
             let raw_fc = format_ctx.raw_mut();
 
             let raw_codec = match codec {
-                Some(c) => c as *const AVCodec,
+                Some(c) => c.raw_codec(),
                 None => core::ptr::null::<AVCodec>(),
             };
 
