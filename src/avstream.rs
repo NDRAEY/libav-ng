@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 
-use crate::{avcodec_parameters::CodecParameters, avformat::FormatContext};
-use libav_sys_ng::{AVCodec, AVRational};
+use crate::{avcodec::codec_parameters::CodecParameters, avformat::FormatContext};
+use libav_sys_ng::{AVCodec, AVRational, AVStream};
 
 pub struct Stream {
     pub(crate) _stream: *mut libav_sys_ng::AVStream,
@@ -36,27 +36,19 @@ impl Stream {
     }
 
     pub fn id(&self) -> i32 {
-        unsafe {
-            (*self._stream).id
-        }
+        unsafe { (*self._stream).id }
     }
 
     pub fn index(&self) -> i32 {
-        unsafe {
-            (*self._stream).index
-        }
+        unsafe { (*self._stream).index }
     }
 
     pub fn time_base(&self) -> AVRational {
-        unsafe {
-            (*self._stream).time_base
-        }
+        unsafe { (*self._stream).time_base }
     }
 
     pub fn duration(&self) -> i64 {
-        unsafe {
-            (*self._stream).duration
-        }
+        unsafe { (*self._stream).duration }
     }
 
     pub fn duration_sec(&self) -> f64 {
@@ -66,12 +58,12 @@ impl Stream {
         duration as f64 * (time_base.num as f64 / time_base.den as f64)
     }
 
-    pub(crate) unsafe fn raw(&self) -> *const libav_sys_ng::AVStream {
-        self._stream.cast()
+    pub unsafe fn raw(&self) -> &AVStream {
+        &*self._stream.cast()
     }
 
-    pub(crate) unsafe fn raw_mut(&mut self) -> *mut libav_sys_ng::AVStream {
-        self._stream
+    pub unsafe fn raw_mut(&mut self) -> &mut AVStream {
+        &mut *self._stream
     }
 }
 

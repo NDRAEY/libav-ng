@@ -1,7 +1,12 @@
 use std::io::Write;
 
-use libav_ng::{avcodec::CodecContext, avformat::FormatContext, avframe::Frame, avpacket::Packet};
-use libav_sys_ng::{AVPixelFormat_AV_PIX_FMT_RGB24, SWS_BILINEAR, SwsContext, sws_freeContext, sws_getContext, sws_scale};
+use libav_ng::{
+    avcodec::CodecContext, avformat::FormatContext, avframe::Frame, avpacket::Packet, sws::Sws,
+};
+use libav_sys_ng::{
+    sws_freeContext, sws_getContext, sws_scale, AVPixelFormat_AV_PIX_FMT_RGB24, SwsContext,
+    SWS_BILINEAR,
+};
 
 fn main() {
     let url = if let Some(url) = std::env::args().skip(1).next() {
@@ -26,7 +31,10 @@ fn main() {
         .expect("Failed to find a video stream");
 
     println!("CodecParams idx: {}", video_stream.index());
-    println!("CodecParams format: {}", video_stream.codec_parameters().format());
+    println!(
+        "CodecParams format: {}",
+        video_stream.codec_parameters().format()
+    );
 
     let mut codec = CodecContext::from_decoder_id(video_stream.codec_parameters().codec_id())
         .expect("Failed to create CodecContext");
@@ -37,7 +45,7 @@ fn main() {
 
     println!("Pixel format: {}", codec.get_pixel_format());
 
-    format_context.seek_msec(video_stream.index(), 5 * 60 * 1000);
+    format_context.seek_msec(video_stream.index(), 4 * 60 * 1000);
 
     let mut packet = Packet::new();
 
@@ -45,58 +53,43 @@ fn main() {
         println!("{}", packet.stream_index());
 
         if packet.stream_index() == video_stream.index() {
-            println!(
-                "{} # {} _ {}",
-                packet.position(),
-                packet.duration(),
-                packet.data().len()
-            );
-
             codec.send_packet(&packet);
 
             let mut frame = Frame::empty().expect("Failed to allocate a frame");
 
-            while codec.receive_frame(&mut frame) >= 0 {                
+            while codec.receive_frame(&mut frame) >= 0 {
                 println!("{}", frame.format());
                 {
-                    unsafe {
-                        let (width, height) = video_stream.codec_parameters().size();
-                        println!("{width} x {height}");
+                    let (width, height) = video_stream.codec_parameters().size();
+                    println!("{width} x {height}");
 
-                        let mut new_frame = Frame::from_size_and_pixfmt(width, height, AVPixelFormat_AV_PIX_FMT_RGB24).unwrap();
-                        new_frame.allocate_buffer();
-
-                        let swsContext: *mut SwsContext = sws_getContext(
-                            width, height,
-                            video_stream.codec_parameters().format(),
-                            width, height,
-                            AVPixelFormat_AV_PIX_FMT_RGB24,
-                            SWS_BILINEAR as _, core::ptr::null_mut(), core::ptr::null_mut(), core::ptr::null()
-                        );
-
-                        println!("{:?} {:?}", frame.linesize(), new_frame.linesize());
-
-                        sws_scale(
-                            swsContext,
-                            (*frame.raw()).data.as_ptr().cast(),
-                            frame.linesize().as_ptr(),
-                            0,
-                            height,
-                            (*new_frame.raw_mut()).data.as_ptr(), new_frame.linesize().as_ptr()
-                        );
-
-
-                        let mut file = std::fs::OpenOptions::new()
-                            .create(true)
-                            .truncate(true)
-                            .write(true)
-                            .open("data.bin")
+                    let mut new_frame =
+                        Frame::from_size_and_pixfmt(width, height, AVPixelFormat_AV_PIX_FMT_RGB24)
                             .unwrap();
+                    new_frame.allocate_buffer();
 
-                        file.write(new_frame.data_plane(0).unwrap()).unwrap();
+                    let sws = Sws::new(
+                        width,
+                        height,
+                        video_stream.codec_parameters().format(),
+                        width,
+                        height,
+                        AVPixelFormat_AV_PIX_FMT_RGB24,
+                        SWS_BILINEAR as _,
+                    );
 
-                        sws_freeContext(swsContext);
-                    }
+                    println!("{:?} {:?}", frame.linesize(), new_frame.linesize());
+
+                    sws.scale(&frame, &mut new_frame);
+
+                    let mut file = std::fs::OpenOptions::new()
+                        .create(true)
+                        .truncate(true)
+                        .write(true)
+                        .open("data.bin")
+                        .unwrap();
+
+                    file.write(new_frame.data_plane(0).unwrap()).unwrap();
                 }
             }
 

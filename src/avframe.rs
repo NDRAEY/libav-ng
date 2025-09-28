@@ -1,6 +1,5 @@
 use libav_sys_ng::{
-    self, av_frame_alloc, av_frame_free, av_frame_get_buffer, av_get_bits_per_pixel,
-    av_get_padded_bits_per_pixel, av_image_alloc, av_pix_fmt_desc_get,
+    self, AVFrame, av_frame_alloc, av_frame_free, av_frame_get_buffer, av_get_bits_per_pixel, av_get_padded_bits_per_pixel, av_image_alloc, av_pix_fmt_desc_get
 };
 
 pub struct Frame {
@@ -87,17 +86,15 @@ impl Frame {
     }
 
     pub fn linesize(&self) -> [i32; 8] {
-        unsafe {
-            (*self._frame).linesize
-        }
+        unsafe { (*self._frame).linesize }
     }
 
-    pub unsafe fn raw(&mut self) -> *const libav_sys_ng::AVFrame {
-        self._frame.cast()
+    pub unsafe fn raw(&self) -> &AVFrame {
+        &*self._frame.cast()
     }
 
-    pub unsafe fn raw_mut(&mut self) -> *mut libav_sys_ng::AVFrame {
-        self._frame
+    pub unsafe fn raw_mut(&mut self) -> &mut AVFrame {
+        &mut *self._frame
     }
 }
 

@@ -1,9 +1,26 @@
 /// This module represents (almost) safe binding to AVCodecContext
 use libav_sys_ng::{
-    AVCodec, AVCodecContext, AVCodecID, AVCodecParameters, AVDictionary, AVPixelFormat, AVRational, av_frame_alloc, av_frame_unref, avcodec_alloc_context3, avcodec_find_decoder, avcodec_find_encoder, avcodec_free_context, avcodec_is_open, avcodec_open2, avcodec_parameters_alloc, avcodec_parameters_copy, avcodec_parameters_free, avcodec_parameters_from_context, avcodec_parameters_to_context, avcodec_receive_frame, avcodec_receive_packet, avcodec_send_frame, avcodec_send_packet
+    av_frame_alloc, av_frame_unref, avcodec_alloc_context3, avcodec_find_decoder,
+    avcodec_find_encoder, avcodec_free_context, avcodec_is_open, avcodec_open2,
+    avcodec_parameters_alloc, avcodec_parameters_copy, avcodec_parameters_free,
+    avcodec_parameters_from_context, avcodec_parameters_to_context, avcodec_receive_frame,
+    avcodec_receive_packet, avcodec_send_frame, avcodec_send_packet, AVCodec, AVCodecContext,
+    AVCodecID, AVDictionary, AVPixelFormat, AVRational,
 };
 
-use crate::{avcodec_parameters::CodecParameters, avdictionary::Dictionary, avframe::{self, Frame}, avpacket::Packet, avstream::Stream};
+use crate::{
+    avcodec::{
+        codec_parameters::CodecParameters,
+        encoder_decoder::{Decoder, Encoder},
+    },
+    avdictionary::Dictionary,
+    avframe::{self, Frame},
+    avpacket::Packet,
+    avstream::Stream,
+};
+
+pub mod codec_parameters;
+pub mod encoder_decoder;
 
 /// AVCodecContext wrapper
 pub struct CodecContext {
@@ -15,7 +32,7 @@ impl CodecContext {
     /// Creates CodecContext from encoder ID
     ///
     /// Returns Some(CodecContext) on success, None on error.
-    pub fn from_encoder_id(id: AVCodecID) -> Option<CodecContext> {
+    pub fn from_encoder_id(id: AVCodecID) -> Option<Encoder> {
         unsafe {
             let codec = avcodec_find_encoder(id);
 
@@ -29,14 +46,16 @@ impl CodecContext {
                 return None;
             }
 
-            Some(CodecContext {
-                _codec: codec,
-                _codec_ctx: codec_ctx,
+            Some(Encoder {
+                ctx: CodecContext {
+                    _codec: codec,
+                    _codec_ctx: codec_ctx,
+                },
             })
         }
     }
 
-    pub fn from_decoder_id(id: AVCodecID) -> Option<CodecContext> {
+    pub fn from_decoder_id(id: AVCodecID) -> Option<Decoder> {
         unsafe {
             let codec = avcodec_find_decoder(id);
 
@@ -50,9 +69,11 @@ impl CodecContext {
                 return None;
             }
 
-            Some(CodecContext {
-                _codec: codec,
-                _codec_ctx: codec_ctx,
+            Some(Decoder {
+                ctx: CodecContext {
+                    _codec: codec,
+                    _codec_ctx: codec_ctx,
+                },
             })
         }
     }
@@ -202,24 +223,9 @@ impl CodecContext {
         }
     }
 
-    /// Send frame to codec
-    pub fn send_frame(&mut self, frame: &mut avframe::Frame) -> i32 {
-        unsafe {
-            return avcodec_send_frame(self._codec_ctx, frame.raw());
-        }
-    }
-
     /// Receive packet from codec to `out`
     pub fn receive_packet(&mut self, out: &mut Packet) -> i32 {
-        unsafe {
-            avcodec_receive_packet(self._codec_ctx, out.raw_mut())
-        }
-    }
-
-    pub fn receive_frame(&mut self, out: &mut Frame) -> i32 {
-        unsafe {
-            avcodec_receive_frame(self._codec_ctx, out.raw_mut())
-        }
+        unsafe { avcodec_receive_packet(self._codec_ctx, out.raw_mut()) }
     }
 
     pub fn send_packet(&mut self, packet: &Packet) -> i32 {

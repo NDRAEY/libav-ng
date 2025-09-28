@@ -5,7 +5,7 @@ use libav_sys_ng::{
     AVMediaType_AVMEDIA_TYPE_UNKNOWN, AVMediaType_AVMEDIA_TYPE_VIDEO,
 };
 use libav_sys_ng::{AVCodecID, AVColorRange, AVRational};
-use std::ffi::{CStr};
+use std::ffi::CStr;
 use std::fmt::Debug;
 
 pub struct CodecParameters {

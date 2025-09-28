@@ -3,11 +3,14 @@ use std::ffi::CString;
 use libav_sys_ng::{
     self, av_dump_format, av_read_frame, av_seek_frame, avformat_alloc_output_context2,
     avformat_find_stream_info, avformat_free_context, avformat_open_input, avformat_write_header,
-    avio_open, avio_seek_time, AVFormatContext, AVInputFormat, AVOutputFormat,
+    avio_open, AVFormatContext, AVInputFormat, AVOutputFormat,
 };
 
-use crate::{avdictionary::Dictionary, avformat_streams_iter::FormatStreamsIter, avpacket::Packet};
+use crate::{
+    avdictionary::Dictionary, avformat::streams_iter::FormatStreamsIter, avpacket::Packet,
+};
 
+pub mod streams_iter;
 pub struct FormatContext {
     _format_ctx: *mut libav_sys_ng::AVFormatContext,
 }
@@ -84,12 +87,12 @@ impl FormatContext {
         }
     }
 
-    pub unsafe fn raw(&self) -> *const AVFormatContext {
-        self._format_ctx
+    pub unsafe fn raw(&self) -> &AVFormatContext {
+        &*self._format_ctx
     }
 
-    pub unsafe fn raw_mut(&mut self) -> *mut AVFormatContext {
-        self._format_ctx
+    pub unsafe fn raw_mut(&mut self) -> &mut AVFormatContext {
+        &mut *self._format_ctx
     }
 
     pub fn dump(&self, index: i32, url: &str, is_output: bool) {

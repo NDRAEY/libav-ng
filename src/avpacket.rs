@@ -18,27 +18,19 @@ impl Packet {
     }
 
     pub fn stream_index(&self) -> i32 {
-        unsafe {
-            (*self.inner).stream_index
-        }
+        unsafe { (*self.inner).stream_index }
     }
 
     pub fn data(&self) -> &[u8] {
-        unsafe {
-            core::slice::from_raw_parts((*self.inner).data, (*self.inner).size as _)
-        }
+        unsafe { core::slice::from_raw_parts((*self.inner).data, (*self.inner).size as _) }
     }
 
     pub fn duration(&self) -> i64 {
-        unsafe {
-            (*self.inner).duration
-        }
+        unsafe { (*self.inner).duration }
     }
 
     pub fn position(&self) -> i64 {
-        unsafe {
-            (*self.inner).pos
-        }
+        unsafe { (*self.inner).pos }
     }
 
     pub unsafe fn raw(&self) -> *const AVPacket {

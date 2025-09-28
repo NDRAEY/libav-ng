@@ -25,7 +25,9 @@ fn main() {
         .set_max_b_frames(1);
 
     if (format_ctx.get_output_format().flags & low_level::AVFMT_GLOBALHEADER as i32) != 0 {
-        codec.set_flags(codec.get_flags() | low_level::AV_CODEC_FLAG_GLOBAL_HEADER as i32);
+        let flags = codec.get_flags() | low_level::AV_CODEC_FLAG_GLOBAL_HEADER as i32;
+
+        codec.set_flags(flags);
     }
 
     match codec.open(None) {
