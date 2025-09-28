@@ -1,4 +1,7 @@
-use std::ffi::{CStr, CString};
+use std::{
+    ffi::{CStr, CString},
+    str::Utf8Error,
+};
 
 use libav_sys_ng::{
     self, av_dict_copy, av_dict_count, av_dict_free, av_dict_get, av_dict_set, AVDictionary,
@@ -25,7 +28,7 @@ impl Dictionary {
         }
     }
 
-    pub fn get(&mut self, key: &str) -> Option<String> {
+    pub fn get(&mut self, key: &str) -> Option<Result<&str, Utf8Error>> {
         let k = CString::new(key).expect("Failed to create key for AVDictionary");
 
         unsafe {
@@ -37,12 +40,7 @@ impl Dictionary {
 
             let raw_value = (*value).value;
 
-            let mw = CStr::from_ptr(raw_value)
-                .to_str()
-                .expect("Failed to convert!")
-                .to_string();
-
-            return Some(mw);
+            Some(CStr::from_ptr(raw_value).to_str())
         }
     }
 
@@ -57,8 +55,8 @@ impl Dictionary {
 
 #[derive(Debug, Clone)]
 pub struct DictionaryEntry {
-    key: String,
-    value: String,
+    pub key: String,
+    pub value: String,
 }
 
 impl DictionaryEntry {
@@ -161,7 +159,7 @@ mod tests {
             println!("Element: {:?}", i);
         }
 
-        assert_eq!(dict.get("pokemon"), Some("zeraora".to_string()));
+        assert_eq!(dict.get("pokemon"), Some(Ok("zeraora")));
 
         println!("Finished");
     }
@@ -173,6 +171,6 @@ mod tests {
         dict.set("hello", "world");
 
         assert_eq!(dict.get("hallo"), None);
-        assert_eq!(dict.get("hello"), Some("world".to_string()));
+        assert_eq!(dict.get("hello"), Some(Ok("world")));
     }
 }

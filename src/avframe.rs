@@ -1,5 +1,6 @@
 use libav_sys_ng::{
-    self, AVFrame, av_frame_alloc, av_frame_free, av_frame_get_buffer, av_get_bits_per_pixel, av_get_padded_bits_per_pixel, av_image_alloc, av_pix_fmt_desc_get
+    self, av_frame_alloc, av_frame_free, av_frame_get_buffer, av_get_bits_per_pixel,
+    av_get_padded_bits_per_pixel, av_image_alloc, av_pix_fmt_desc_get, AVFrame,
 };
 
 pub struct Frame {
