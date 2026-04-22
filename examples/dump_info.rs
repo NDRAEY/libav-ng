@@ -18,8 +18,6 @@ fn main() {
 
     let mut format_context = FormatContext::open_input(&url).expect("Failed to open file!");
 
-    format_context.find_stream_info();
-
     for i in format_context.streams() {
         let index = i.index();
         let parameters = i.codec_parameters();

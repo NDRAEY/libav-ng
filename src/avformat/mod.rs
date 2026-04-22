@@ -14,6 +14,8 @@ use crate::{
 pub mod streams_iter;
 pub struct FormatContext {
     _format_ctx: *mut libav_sys_ng::AVFormatContext,
+
+    acquired_stream_info: bool
 }
 
 impl FormatContext {
@@ -45,6 +47,8 @@ impl FormatContext {
             } else {
                 Some(FormatContext {
                     _format_ctx: context,
+
+                    acquired_stream_info: false
                 })
             }
         }
@@ -69,13 +73,23 @@ impl FormatContext {
             } else {
                 Some(FormatContext {
                     _format_ctx: context,
+
+                    acquired_stream_info: false
                 })
             }
         }
     }
 
-    pub fn find_stream_info(&self) -> i32 {
-        unsafe { avformat_find_stream_info(self._format_ctx, core::ptr::null_mut()) }
+    pub fn find_stream_info(&mut self) -> Option<i32> {
+    	if self.acquired_stream_info {
+    		return None;
+    	}
+    	
+        let result = Some(unsafe { avformat_find_stream_info(self._format_ctx, core::ptr::null_mut()) });
+
+        self.acquired_stream_info = true;
+
+        result
     }
 
     pub unsafe fn get_input_format(&self) -> *const AVInputFormat {
@@ -158,6 +172,8 @@ impl FormatContext {
     }
 
     pub fn streams(&mut self) -> FormatStreamsIter<'_> {
+    	self.find_stream_info();
+    	
         FormatStreamsIter::new(self)
     }
 
