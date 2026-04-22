@@ -18,8 +18,6 @@ fn main() {
 
     let mut format_context = FormatContext::open_input(&url).expect("Failed to open file!");
 
-    format_context.find_stream_info();
-
     for i in format_context.streams() {
         println!("{i:#?}");
     }
@@ -36,16 +34,6 @@ fn main() {
     codec.fill_from_parameters(&video_stream.codec_parameters());
 
     codec.open(None).unwrap();
-
-    /*
-    = CodecCtxBuilder::with_decoder(
-        video_stream
-            .codec_parameters()
-            .codec_id())
-    .fill_from_parameters(&video_stream.codec_parameters())
-       .open(None)
-       .unwrap();
-       */
 
     format_context.seek_msec(video_stream.index(), 4 * 60 * 1000);
 
