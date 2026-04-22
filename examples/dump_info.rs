@@ -1,12 +1,4 @@
-use std::io::Write;
-
-use libav_ng::{
-    avcodec::CodecContext, avformat::FormatContext, avframe::Frame, avpacket::Packet, sws::Sws,
-};
-use libav_sys_ng::{
-    sws_freeContext, sws_getContext, sws_scale, AVMediaType_AVMEDIA_TYPE_AUDIO,
-    AVMediaType_AVMEDIA_TYPE_VIDEO, AVPixelFormat_AV_PIX_FMT_RGB24, SwsContext, SWS_BILINEAR,
-};
+use libav_ng::avformat::FormatContext;
 
 fn main() {
     let url = if let Some(url) = std::env::args().skip(1).next() {
