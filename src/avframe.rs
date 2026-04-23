@@ -1,11 +1,16 @@
+use std::cell::Cell;
+
 use libav_sys_ng::{
     self, av_frame_alloc, av_frame_free, av_frame_get_buffer, av_get_bits_per_pixel,
-    av_pix_fmt_desc_get, AVFrame,
+    av_get_bytes_per_sample, av_pix_fmt_desc_get, AVFrame,
 };
 
 pub struct Frame {
     _frame: *mut libav_sys_ng::AVFrame,
+
     is_frame_allocated: bool,
+
+    bytes_per_sample: Cell<Option<i32>>
 }
 
 impl Frame {
@@ -19,6 +24,8 @@ impl Frame {
         Some(Self {
             _frame,
             is_frame_allocated: false,
+
+            bytes_per_sample: Cell::new(None)
         })
     }
 
@@ -36,6 +43,8 @@ impl Frame {
                 let mut this = Frame {
                     _frame,
                     is_frame_allocated: false,
+
+                    bytes_per_sample: Cell::new(None)
                 };
 
                 this.allocate_buffer();
@@ -50,17 +59,31 @@ impl Frame {
             return Err("Out of bounds.");
         }
 
+        if (unsafe { *self._frame }).data[plane_nr].is_null() {
+            return Err("Invalid access.");
+        }
+
         let size = self.frame_size()?;
+        //let size = self.linesize()[plane_nr];
 
         unsafe {
             Ok(core::slice::from_raw_parts(
                 (*self._frame).data[plane_nr],
-                size,
+                size as usize,
             ))
         }
     }
 
     pub fn frame_size(&self) -> Result<usize, &str> {
+        if self.is_audio() {
+            return Ok(unsafe {
+                (*self._frame).nb_samples as usize
+                    * self.channel_layout().nb_channels as usize
+                    // * av_get_bytes_per_sample((*self._frame).format) as usize
+                    * self.bytes_per_sample() as usize
+            });
+        }
+
         let data = unsafe { av_pix_fmt_desc_get((*self._frame).format) };
         let depth = if data.is_null() {
             Err("Failed to get pixel format info")
@@ -113,6 +136,30 @@ impl Frame {
 
     pub fn linesize(&self) -> [i32; 8] {
         unsafe { (*self._frame).linesize }
+    }
+
+    pub fn sample_count(&self) -> i32 {
+        unsafe { (*self._frame).nb_samples }
+    }
+
+    pub fn channel_layout(&self) -> &libav_sys_ng::AVChannelLayout {
+        unsafe { &(*self._frame).ch_layout }
+    }
+
+    pub fn is_audio(&self) -> bool {
+        unsafe {
+            (*self._frame).ch_layout.nb_channels != 0
+                && (*self._frame).width == 0
+                && (*self._frame).height == 0
+        }
+    }
+
+    fn bytes_per_sample(&self) -> i32 {
+        if self.bytes_per_sample.get().is_none() {
+            self.bytes_per_sample.set(Some(unsafe { av_get_bytes_per_sample((*self._frame).format) }));
+        }
+
+        self.bytes_per_sample.get().unwrap()
     }
 
     pub unsafe fn raw(&self) -> &AVFrame {

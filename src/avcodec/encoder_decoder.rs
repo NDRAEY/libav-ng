@@ -2,9 +2,9 @@
 /// decoder and encoder in CodecContext, because using wrong mode cause SIGSEGV.use std::ops::{Deref, DerefMut};
 use std::ops::{Deref, DerefMut};
 
-use libav_sys_ng::{avcodec_receive_frame, avcodec_send_frame};
+use libav_sys_ng::{EAGAIN, EINVAL, ENOMEM, EOF, avcodec_receive_frame, avcodec_send_frame};
 
-use crate::{avcodec::CodecContext, avframe::Frame};
+use crate::{avcodec::{CodecContext, error::{AVCodecError, AVCodecResult}}, avframe::Frame};
 
 pub struct Encoder {
     pub(crate) ctx: CodecContext,
@@ -12,8 +12,17 @@ pub struct Encoder {
 
 impl Encoder {
     /// Send frame to codec
-    pub fn send_frame(&mut self, frame: &Frame) -> i32 {
-        unsafe { avcodec_send_frame(self._codec_ctx, frame.raw()) }
+    pub fn send_frame(&mut self, frame: &Frame) -> AVCodecResult<()> {
+        let result = unsafe { avcodec_send_frame(self._codec_ctx, frame.raw()) };
+
+        match result {
+            0 => Ok(()),
+            EOF => Err(AVCodecError::Eof),
+            code if code == -(EAGAIN as i32) => Err(AVCodecError::TryAgain),
+            code if code == -(EINVAL as i32) => Err(AVCodecError::InvalidRequest),
+            code if code == -(ENOMEM as i32) => Err(AVCodecError::NoMemory),
+            code => Err(AVCodecError::Other(code))
+        }
     }
 }
 
@@ -36,8 +45,16 @@ pub struct Decoder {
 }
 
 impl Decoder {
-    pub fn receive_frame(&mut self, out: &mut Frame) -> i32 {
-        unsafe { avcodec_receive_frame(self._codec_ctx, out.raw_mut()) }
+    pub fn receive_frame(&mut self, out: &mut Frame) -> AVCodecResult<()> {
+        let result = unsafe { avcodec_receive_frame(self._codec_ctx, out.raw_mut()) };
+
+        match result {
+            0 => Ok(()),
+            EOF => Err(AVCodecError::Eof),
+            code if code == -(EAGAIN as i32) => Err(AVCodecError::TryAgain),
+            code if code == -(EINVAL as i32) => Err(AVCodecError::InvalidRequest),
+            code => Err(AVCodecError::Other(code))
+        }
     }
 }
 

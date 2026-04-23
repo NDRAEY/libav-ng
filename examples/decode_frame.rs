@@ -1,11 +1,10 @@
 use std::io::Write;
 
 use libav_ng::{
-    avcodec::CodecContext, avformat::FormatContext, avframe::Frame, avpacket::Packet, sws::Sws,
+    avcodec::{CodecContext, error::AVCodecError}, avformat::FormatContext, avframe::Frame, avpacket::Packet, sws::Sws,
 };
 use libav_sys_ng::{
-    sws_freeContext, sws_getContext, sws_scale, AVPixelFormat_AV_PIX_FMT_RGB24, SwsContext,
-    SWS_BILINEAR,
+    AVPixelFormat_AV_PIX_FMT_RGB24, SwsContext, SwsFlags_SWS_BILINEAR, sws_freeContext, sws_getContext, sws_scale
 };
 
 fn main() {
@@ -14,6 +13,12 @@ fn main() {
     } else {
         eprintln!("No input file!");
         std::process::exit(1);
+    };
+
+    let time = if let Some(time) = std::env::args().skip(2).next() {
+        time.parse::<usize>().expect("Failed to parse time in milliseconds")
+    } else {
+        0
     };
 
     let mut format_context = FormatContext::open_input(&url).expect("Failed to open file!");
@@ -35,19 +40,33 @@ fn main() {
 
     codec.open(None).unwrap();
 
-    format_context.seek_msec(video_stream.index(), 4 * 60 * 1000);
+    format_context.seek_msec(video_stream.index(), time as i64);
 
     let mut packet = Packet::new();
 
     while format_context.read_frame(&mut packet) >= 0 {
-        println!("{}", packet.stream_index());
+        println!("Stream index: {}", packet.stream_index());
 
         if packet.stream_index() == video_stream.index() {
             codec.send_packet(&packet);
+            println!("Sent!");
 
             let mut frame = Frame::empty().expect("Failed to allocate a frame");
 
-            while codec.receive_frame(&mut frame) >= 0 {
+            loop {
+                let code = codec.receive_frame(&mut frame);
+
+                match code {
+                    Ok(()) => (),
+                    Err(AVCodecError::TryAgain) => {
+                        codec.send_packet(&packet);
+                        continue;
+                    }
+                    Err(err) => {
+                        panic!("Other error: {err:?}");
+                    }
+                }
+                
                 let (width, height) = video_stream.codec_parameters().size();
                 println!("{width} x {height}");
 
@@ -62,7 +81,7 @@ fn main() {
                     width,
                     height,
                     AVPixelFormat_AV_PIX_FMT_RGB24,
-                    SWS_BILINEAR as _,
+                    SwsFlags_SWS_BILINEAR as _,
                 );
 
                 println!("{:?} {:?}", frame.linesize(), new_frame.linesize());
@@ -76,7 +95,11 @@ fn main() {
                     .open("data.bin")
                     .unwrap();
 
+                println!("Len: {:?}", new_frame.data_plane(0).unwrap().len());
+
                 file.write(new_frame.data_plane(0).unwrap()).unwrap();
+
+                break;
             }
 
             break;

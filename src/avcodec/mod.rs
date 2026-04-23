@@ -18,6 +18,7 @@ use crate::{
 
 pub mod codec_parameters;
 pub mod encoder_decoder;
+pub mod error;
 
 /// AVCodecContext wrapper
 pub struct CodecContext {
@@ -174,6 +175,10 @@ impl CodecContext {
         }
 
         self
+    }
+
+    pub fn sample_format(&self) -> i32 {
+        (unsafe { *self._codec_ctx }).sample_fmt
     }
 
     /// Fills parameters from codec into `params`

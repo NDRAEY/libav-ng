@@ -1,10 +1,7 @@
 use std::ffi::CString;
 
 use libav_sys_ng::{
-    self, av_dump_format, av_read_frame, av_seek_frame, av_write_frame, av_write_trailer,
-    avformat_alloc_output_context2, avformat_find_stream_info, avformat_free_context,
-    avformat_open_input, avformat_write_header, avio_open, AVFormatContext, AVInputFormat,
-    AVOutputFormat,
+    self, AVFormatContext, AVInputFormat, AVOutputFormat, av_dump_format, av_read_frame, av_seek_frame, av_write_frame, av_write_trailer, avformat_alloc_output_context2, avformat_close_input, avformat_find_stream_info, avformat_free_context, avformat_open_input, avformat_write_header, avio_close, avio_open
 };
 
 use crate::{
@@ -15,7 +12,10 @@ pub mod streams_iter;
 pub struct FormatContext {
     _format_ctx: *mut libav_sys_ng::AVFormatContext,
 
-    acquired_stream_info: bool
+    acquired_stream_info: bool,
+    is_an_opened_input: bool,
+
+    input_url: Option<CString>,
 }
 
 impl FormatContext {
@@ -36,7 +36,7 @@ impl FormatContext {
             let real_filename = CString::new(filename).expect("CString::new(filename) failed");
 
             avformat_alloc_output_context2(
-                &mut context,
+                &raw mut context,
                 ptr,
                 fmt_name.as_ptr(),
                 real_filename.as_ptr(),
@@ -48,7 +48,10 @@ impl FormatContext {
                 Some(FormatContext {
                     _format_ctx: context,
 
-                    acquired_stream_info: false
+                    acquired_stream_info: false,
+                    is_an_opened_input: false,
+
+                    input_url: None,
                 })
             }
         }
@@ -62,7 +65,7 @@ impl FormatContext {
 
             // TODO: Manage InputFormat and Options arguments.
             let result = avformat_open_input(
-                &mut context,
+                &raw mut context,
                 url_c.as_ptr(),
                 core::ptr::null(),
                 core::ptr::null_mut(),
@@ -74,7 +77,10 @@ impl FormatContext {
                 Some(FormatContext {
                     _format_ctx: context,
 
-                    acquired_stream_info: false
+                    acquired_stream_info: false,
+                    is_an_opened_input: true,
+
+                    input_url: Some(url_c),
                 })
             }
         }
@@ -164,6 +170,8 @@ impl FormatContext {
     }
 
     pub fn read_frame(&mut self, packet: &mut Packet) -> i32 {
+        // packet.clear();
+
         unsafe { av_read_frame(self._format_ctx, packet.raw_mut()) }
     }
 
@@ -185,7 +193,17 @@ impl FormatContext {
 impl Drop for FormatContext {
     fn drop(&mut self) {
         unsafe {
-            avformat_free_context(self._format_ctx);
+            assert!(!self._format_ctx.is_null());
+
+            // if !(*self._format_ctx).pb.is_null() {
+            //     avio_close((*self._format_ctx).pb);
+            // }
+
+            if self.is_an_opened_input {
+                avformat_close_input(&raw mut self._format_ctx);
+            } else {
+                avformat_free_context(self._format_ctx);
+            }
         }
     }
 }

@@ -1,3 +1,7 @@
 /target
 *.bin
 *.png
+*.wav
+*.pcm
+perf*
+**/flamegraph.svg

@@ -5,6 +5,7 @@ pub mod avframe;
 pub mod avpacket;
 pub mod avstream;
 pub mod sws;
+pub mod swr;
 
 pub mod low_level {
     pub use libav_sys_ng::*;
