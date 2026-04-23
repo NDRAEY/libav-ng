@@ -28,6 +28,7 @@ impl Stream {
         }
     }
 
+    #[inline]
     pub fn codec_parameters(&self) -> CodecParameters {
         unsafe {
             CodecParameters {
@@ -36,22 +37,27 @@ impl Stream {
         }
     }
 
+    #[inline(always)]
     pub fn id(&self) -> i32 {
         unsafe { (*self._stream).id }
     }
 
+    #[inline(always)]
     pub fn index(&self) -> i32 {
         unsafe { (*self._stream).index }
     }
 
+    #[inline(always)]
     pub fn time_base(&self) -> AVRational {
         unsafe { (*self._stream).time_base }
     }
 
+    #[inline(always)]
     pub fn duration(&self) -> i64 {
         unsafe { (*self._stream).duration }
     }
 
+    #[inline]
     pub fn duration_sec(&self) -> f64 {
         let time_base = self.time_base();
         let duration = self.duration();
@@ -59,10 +65,12 @@ impl Stream {
         (duration as f64 * time_base.num as f64) / time_base.den as f64
     }
 
+    #[inline(always)]
     pub unsafe fn raw(&self) -> &AVStream {
         &*self._stream.cast()
     }
 
+    #[inline(always)]
     pub unsafe fn raw_mut(&mut self) -> &mut AVStream {
         &mut *self._stream
     }

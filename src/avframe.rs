@@ -129,22 +129,27 @@ impl Frame {
         self.is_frame_allocated = true;
     }
 
+    #[inline(always)]
     pub fn format(&self) -> i32 {
         unsafe { (*self._frame).format }
     }
 
+    #[inline(always)]
     pub fn linesize(&self) -> [i32; 8] {
         unsafe { (*self._frame).linesize }
     }
 
+    #[inline(always)]
     pub fn sample_count(&self) -> i32 {
         unsafe { (*self._frame).nb_samples }
     }
 
+    #[inline(always)]
     pub fn channel_layout(&self) -> &libav_sys_ng::AVChannelLayout {
         unsafe { &(*self._frame).ch_layout }
     }
 
+    #[inline]
     pub fn is_audio(&self) -> bool {
         unsafe {
             (*self._frame).ch_layout.nb_channels != 0
@@ -161,14 +166,17 @@ impl Frame {
         self.bytes_per_sample.get().unwrap()
     }
 
+    #[inline(always)]
     pub fn pts(&self) -> i64 {
         unsafe { self.raw().pts }
     }
 
+    #[inline(always)]
     pub unsafe fn raw(&self) -> &AVFrame {
         &*self._frame.cast()
     }
 
+    #[inline(always)]
     pub unsafe fn raw_mut(&mut self) -> &mut AVFrame {
         &mut *self._frame
     }
