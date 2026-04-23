@@ -82,6 +82,7 @@ impl CodecContext {
             Some(opt) => (unsafe { &mut opt.raw() }) as *mut *mut AVDictionary,
             None => core::ptr::null_mut(),
         };
+
         let code = unsafe { avcodec_open2(self._codec_ctx, self._codec, raw_options) };
 
         if code < 0 {
@@ -189,7 +190,7 @@ impl CodecContext {
     }
 
     /// Fills codec parameters from `params`
-    pub fn fill_from_parameters(&self, params: &CodecParameters) {
+    pub fn fill_from_parameters(&mut self, params: &CodecParameters) {
         unsafe {
             avcodec_parameters_to_context(self._codec_ctx, params._p);
         }

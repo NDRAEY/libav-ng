@@ -91,11 +91,13 @@ impl FormatContext {
     		return None;
     	}
     	
-        let result = Some(unsafe { avformat_find_stream_info(self._format_ctx, core::ptr::null_mut()) });
+        let result = unsafe { avformat_find_stream_info(self._format_ctx, core::ptr::null_mut()) };
+        
+        println!("Streams: {result:?}");
 
         self.acquired_stream_info = true;
 
-        result
+        Some(result)
     }
 
     pub unsafe fn get_input_format(&self) -> *const AVInputFormat {
@@ -170,7 +172,7 @@ impl FormatContext {
     }
 
     pub fn read_frame(&mut self, packet: &mut Packet) -> i32 {
-        // packet.clear();
+        packet.clear();
 
         unsafe { av_read_frame(self._format_ctx, packet.raw_mut()) }
     }

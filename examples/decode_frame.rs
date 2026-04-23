@@ -1,10 +1,10 @@
 use std::io::Write;
 
 use libav_ng::{
-    avcodec::{CodecContext, error::AVCodecError}, avformat::FormatContext, avframe::Frame, avpacket::Packet, sws::Sws,
+    avcodec::error::AVCodecError, avformat::FormatContext, avframe::Frame, avpacket::Packet, sws::Sws,
 };
 use libav_sys_ng::{
-    AVPixelFormat_AV_PIX_FMT_RGB24, SwsContext, SwsFlags_SWS_BILINEAR, sws_freeContext, sws_getContext, sws_scale
+    AVPixelFormat_AV_PIX_FMT_RGB24, SwsFlags_SWS_BILINEAR
 };
 
 fn main() {
@@ -33,10 +33,13 @@ fn main() {
         .next()
         .expect("Failed to find a video stream");
 
-    let mut codec = CodecContext::from_decoder_id(video_stream.codec_parameters().codec_id())
+    let mut codec = video_stream.codec_parameters().to_decoder()
         .expect("Failed to create CodecContext");
 
-    codec.fill_from_parameters(&video_stream.codec_parameters());
+    // let mut codec = CodecContext::from_decoder_id(video_stream.codec_parameters().codec_id())
+    //     .expect("Failed to create CodecContext");
+
+    // codec.fill_from_parameters(&video_stream.codec_parameters());
 
     codec.open(None).unwrap();
 

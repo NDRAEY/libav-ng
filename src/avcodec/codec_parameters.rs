@@ -8,6 +8,9 @@ use libav_sys_ng::{AVCodecID, AVColorRange, AVRational};
 use std::ffi::CStr;
 use std::fmt::Debug;
 
+use crate::avcodec::CodecContext;
+use crate::avcodec::encoder_decoder::Decoder;
+
 pub struct CodecParameters {
     pub(crate) _p: *mut AVCodecParameters,
 }
@@ -86,6 +89,14 @@ impl CodecParameters {
     #[inline]
     pub fn is_video(&self) -> bool {
         self.codec_type() == AVMediaType_AVMEDIA_TYPE_VIDEO
+    }
+
+    pub fn to_decoder(&self) -> Option<Decoder> {
+        let mut decoder = CodecContext::from_decoder_id(self.codec_id())?;
+
+        decoder.fill_from_parameters(self);
+
+        Some(decoder)
     }
 
     #[inline]

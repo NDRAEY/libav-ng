@@ -63,7 +63,7 @@ fn main() {
         }
     }
 
-    codec.send_frame(&frame);
+    codec.send_frame(&frame).unwrap();
 
     let mut packet = Packet::new();
 

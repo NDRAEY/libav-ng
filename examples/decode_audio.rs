@@ -1,7 +1,7 @@
 use std::io::Write;
 
 use libav_ng::{
-    avcodec::{CodecContext, error::AVCodecError},
+    avcodec::{error::AVCodecError},
     avformat::FormatContext,
     avframe::Frame,
     avpacket::Packet,
@@ -23,15 +23,18 @@ fn main() {
         .streams()
         .filter(|x| x.codec_parameters().is_audio())
         .next()
-        .unwrap_or_else(|| panic!("No audio streams found!"));
+        .expect("No audio streams found!");
 
-    let mut decoder = CodecContext::from_decoder_id(audio_stream.codec_parameters().codec_id())
-        .expect("Failed to find decoder!");
+    // let mut decoder = CodecContext::from_decoder_id(audio_stream.codec_parameters().codec_id())
+    //     .expect("Failed to find decoder!");
 
-    decoder.fill_from_parameters(&audio_stream.codec_parameters());
+    // decoder.fill_from_parameters(&audio_stream.codec_parameters());
+
+
+    let mut decoder = audio_stream.codec_parameters().to_decoder().expect("Failed to find decoder!");
 
     decoder.open(None).unwrap();
-    
+
     let bps = unsafe { av_get_bytes_per_sample(decoder.sample_format()) };
 
     let mut output_file = std::fs::OpenOptions::new()
@@ -73,23 +76,32 @@ fn main() {
 
             // println!("Linesize: {:?}", frame.linesize());
 
-
             let is_planar = unsafe { av_sample_fmt_is_planar(decoder.sample_format()) } != 0;
 
             // println!("Planar: {is_planar}");
 
+            
             if is_planar {
+                let mut buffer: Vec<u8> = Vec::with_capacity((frame.sample_count() * frame.channel_layout().nb_channels) as _);
+
                 for sample_idx in 0..frame.sample_count() {
                     for channel in 0..frame.channel_layout().nb_channels {
-                        let data = &frame.data_plane(channel as usize).unwrap()[(sample_idx * bps) as usize..];
+                        let data = &frame.data_plane(channel as usize).unwrap()
+                            [(sample_idx * bps) as usize..][..bps as usize];
 
-                        // output_file.write(&data[..bps as usize]).unwrap();
+                        // We must buffer our writes, because all blocks have small size.
+                        buffer.extend_from_slice(data);
                     }
                 }
+
+                let current_pts = frame.pts();
+                let total_duration = audio_stream.duration();
+
+                print!("\r{} / {} ({:.2}%)", current_pts, total_duration, (current_pts as f64 / total_duration as f64) * 100.0);
+
+                output_file.write(&buffer).unwrap();
             } else {
                 let plane = frame.data_plane(0).unwrap();
-
-                println!("Writing: {} ({:?})", plane.len(), frame.linesize());
 
                 output_file.write(plane).unwrap();
             }

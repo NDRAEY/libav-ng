@@ -64,7 +64,6 @@ impl Frame {
         }
 
         let size = self.frame_size()?;
-        //let size = self.linesize()[plane_nr];
 
         unsafe {
             Ok(core::slice::from_raw_parts(
@@ -160,6 +159,10 @@ impl Frame {
         }
 
         self.bytes_per_sample.get().unwrap()
+    }
+
+    pub fn pts(&self) -> i64 {
+        unsafe { self.raw().pts }
     }
 
     pub unsafe fn raw(&self) -> &AVFrame {
