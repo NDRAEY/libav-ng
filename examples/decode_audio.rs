@@ -25,11 +25,6 @@ fn main() {
         .next()
         .expect("No audio streams found!");
 
-    // let mut decoder = CodecContext::from_decoder_id(audio_stream.codec_parameters().codec_id())
-    //     .expect("Failed to find decoder!");
-
-    // decoder.fill_from_parameters(&audio_stream.codec_parameters());
-
 
     let mut decoder = audio_stream.codec_parameters().to_decoder().expect("Failed to find decoder!");
 
