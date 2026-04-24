@@ -1,9 +1,10 @@
 use std::cell::Cell;
 
 use libav_sys_ng::{
-    self, av_frame_alloc, av_frame_free, av_frame_get_buffer, av_get_bits_per_pixel,
-    av_get_bytes_per_sample, av_pix_fmt_desc_get, AVFrame,
+    self, AVFrame, av_frame_alloc, av_frame_free, av_frame_get_buffer, av_get_bits_per_pixel, av_get_bytes_per_sample, av_pix_fmt_desc_get
 };
+
+use crate::avcodec::CodecContext;
 
 pub struct Frame {
     _frame: *mut libav_sys_ng::AVFrame,
@@ -52,6 +53,10 @@ impl Frame {
                 Some(this)
             }
         }
+    }
+
+    pub fn from_codec(codec: &CodecContext) -> Option<Self> {
+        Self::from_size_and_pixfmt(codec.get_size().0, codec.get_size().1, codec.get_pixel_format())
     }
 
     pub fn data_plane(&self, plane_nr: usize) -> Result<&[u8], &str> {

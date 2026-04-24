@@ -14,6 +14,7 @@ pub struct FormatContext {
 
     acquired_stream_info: bool,
     is_an_opened_input: bool,
+    is_an_opened_io: bool,
 
     input_url: Option<CString>,
 }
@@ -50,6 +51,7 @@ impl FormatContext {
 
                     acquired_stream_info: false,
                     is_an_opened_input: false,
+                    is_an_opened_io: false,
 
                     input_url: None,
                 })
@@ -79,6 +81,7 @@ impl FormatContext {
 
                     acquired_stream_info: false,
                     is_an_opened_input: true,
+                    is_an_opened_io: false,
 
                     input_url: Some(url_c),
                 })
@@ -129,6 +132,8 @@ impl FormatContext {
             let raw_url = CString::new(url).expect("CString::new(url) failed");
 
             let x = avio_open(&mut (*self._format_ctx).pb, raw_url.as_ptr(), flags);
+
+            self.is_an_opened_io = true;
 
             if x < 0 {
                 return Err(x);
@@ -197,9 +202,9 @@ impl Drop for FormatContext {
         unsafe {
             assert!(!self._format_ctx.is_null());
 
-            // if !(*self._format_ctx).pb.is_null() {
-            //     avio_close((*self._format_ctx).pb);
-            // }
+            if self.is_an_opened_io {
+                avio_close((*self._format_ctx).pb);
+            }
 
             if self.is_an_opened_input {
                 avformat_close_input(&raw mut self._format_ctx);

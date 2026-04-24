@@ -2,10 +2,10 @@ use libav_ng::{
     self, avcodec::CodecContext, avformat::FormatContext, avframe::Frame, avpacket::Packet,
     avstream::Stream, low_level,
 };
-use libav_sys_ng::{AVPixelFormat_AV_PIX_FMT_RGB24, AVIO_FLAG_WRITE};
+use libav_sys_ng::{AVIO_FLAG_WRITE};
 
 fn main() {
-    let filename = "bk.png";
+    let filename = "pattern.png";
     let width = 512;
     let height = 512;
 
@@ -16,7 +16,7 @@ fn main() {
         .expect("Failed to create CodecContext");
 
     let mut stream =
-        Stream::new(&mut format_ctx, Some(&*codec)).expect("Failed to create a stream");
+        Stream::new(&mut format_ctx, Some(&codec)).expect("Failed to create a stream");
 
     codec
         .set_size(width, height)
@@ -48,8 +48,7 @@ fn main() {
         .write_header(None)
         .expect("Failed to write a header!");
 
-    let mut frame = Frame::from_size_and_pixfmt(width, height, AVPixelFormat_AV_PIX_FMT_RGB24)
-        .expect("Failed to make a frame!");
+    let mut frame = Frame::from_codec(&codec).expect("Failed to make a frame!");
 
     let data = frame.data_plane_mut(0).expect("Failed to get plane!");
 
@@ -57,9 +56,9 @@ fn main() {
         for x in 0usize..width as usize {
             let coord = y * (width as usize * 3usize) + (x * 3);
 
-            data[coord + 0] = 0xff;
-            data[coord + 1] = 0xff;
-            data[coord + 2] = 0xff;
+            data[coord + 0] = x as u8;
+            data[coord + 1] = y as u8;
+            data[coord + 2] = (x + y) as u8;
         }
     }
 
@@ -74,6 +73,4 @@ fn main() {
     packet.clear();
 
     format_ctx.write_trailer();
-
-    println!("Hello, world!");
 }
