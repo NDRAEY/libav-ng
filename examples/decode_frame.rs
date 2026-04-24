@@ -36,11 +36,6 @@ fn main() {
     let mut codec = video_stream.codec_parameters().to_decoder()
         .expect("Failed to create CodecContext");
 
-    // let mut codec = CodecContext::from_decoder_id(video_stream.codec_parameters().codec_id())
-    //     .expect("Failed to create CodecContext");
-
-    // codec.fill_from_parameters(&video_stream.codec_parameters());
-
     codec.open(None).unwrap();
 
     format_context.seek_msec(video_stream.index(), time as i64);
